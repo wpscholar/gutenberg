@@ -71,12 +71,11 @@ class GalleryImage extends Component {
 		}
 	}
 
-	componentWillReceiveProps( { isSelected, image, url } ) {
-		if ( image && ! url ) {
-			this.props.setAttributes( {
-				url: image.source_url,
-				alt: image.alt_text,
-			} );
+	componentWillReceiveProps( { isSelected, attributesToSet } ) {
+		// Each time we receive an attributesToSet prop we pass it to set attributes.
+		// Required because some attributes may have to be async loaded from the rest API.
+		if ( attributesToSet ) {
+			this.props.setAttributes( attributesToSet );
 		}
 
 		// unselect the caption so when the user selects other image and comeback
@@ -145,10 +144,23 @@ class GalleryImage extends Component {
 }
 
 export default withSelect( ( select, ownProps ) => {
+	const { id, url } = ownProps;
+	// We already have the url or the id is unknown no need to set attributes in both cases.
+	if ( url || ! id ) {
+		return;
+	}
 	const { getMedia } = select( 'core' );
-	const { id } = ownProps;
-
+	const image = getMedia( id );
+	// The image has not yet loaded, we can not set the attributes yet.
+	if ( ! image ) {
+		return;
+	}
+	// The url is not know, but we already have the image loaded from the rest api.
+	// So we return attributes that will be set during componentWillReceiveProps invocation using the information from the rest api response.
 	return {
-		image: id ? getMedia( id ) : null,
+		attributesToSet: {
+			url: image.source_url,
+			alt: image.alt_text,
+		},
 	};
 } )( GalleryImage );
