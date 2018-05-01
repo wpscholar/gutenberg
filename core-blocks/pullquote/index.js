@@ -86,6 +86,7 @@ export const settings = {
 							}
 							isSelected={ isSelected && editable === 'cite' }
 							onFocus={ onSetActiveEditable( 'cite' ) }
+							inlineToolbar
 						/>
 					) }
 				</blockquote>
