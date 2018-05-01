@@ -377,7 +377,7 @@ class ImageBlock extends Component {
 							onFocus={ this.onFocusCaption }
 							onChange={ ( value ) => setAttributes( { caption: value } ) }
 							isSelected={ this.state.captionFocused }
-							inlineToolbar
+							inlineToolbar="center"
 						/>
 					) : null }
 				</figure>

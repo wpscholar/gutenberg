@@ -124,7 +124,7 @@ export const settings = {
 							placeholder={ __( 'Write citation…' ) }
 							isSelected={ isSelected && editable === 'cite' }
 							onFocus={ onSetActiveEditable( 'cite' ) }
-							inlineToolbar
+							inlineToolbar="left"
 						/>
 					) }
 				</blockquote>

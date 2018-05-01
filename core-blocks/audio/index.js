@@ -156,7 +156,7 @@ export const settings = {
 								placeholder={ __( 'Write caption…' ) }
 								value={ caption }
 								onChange={ ( value ) => setAttributes( { caption: value } ) }
-								inlineToolbar
+								inlineToolbar="center"
 							/>
 						) }
 					</figure>
