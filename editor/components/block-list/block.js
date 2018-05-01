@@ -557,6 +557,7 @@ export class BlockListBlock extends Component {
 								id={ uid }
 								isSelectionEnabled={ this.props.isSelectionEnabled }
 								toggleSelection={ this.props.toggleSelection }
+								hasSelectedBlock={ this.props.hasSelectedBlock }
 							/>
 						) }
 						{ isValid && mode === 'html' && (
@@ -617,6 +618,7 @@ const applyWithSelect = withSelect( ( select, { uid, rootUID } ) => {
 		getSelectedBlocksInitialCaretPosition,
 		getBlockSelectionEnd,
 		getBlockRootUID,
+		hasBlockSelectedBlock,
 	} = select( 'core/editor' );
 	const isSelected = isBlockSelected( uid );
 	return {
@@ -638,6 +640,7 @@ const applyWithSelect = withSelect( ( select, { uid, rootUID } ) => {
 		isSelected,
 		rootUIDOfRoot: getBlockRootUID( rootUID ),
 		orderOfRoot: getBlockIndex( rootUID, getBlockRootUID( rootUID ) ),
+		hasSelectedBlock: hasBlockSelectedBlock( uid ),
 	};
 } );
 

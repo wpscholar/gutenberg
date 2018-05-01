@@ -81,7 +81,7 @@ export const settings = {
 
 	edit: withState( {
 		editable: 'content',
-	} )( ( { attributes, setAttributes, isSelected, className, editable, setState } ) => {
+	} )( ( { attributes, setAttributes, isSelected, className, editable, setState, hasSelectedBlock } ) => {
 		const { align, citation, style } = attributes;
 		const containerClassname = classnames( className, style === 2 ? 'is-large' : '' );
 		const onSetActiveEditable = ( newEditable ) => () => {
@@ -111,7 +111,7 @@ export const settings = {
 					style={ { textAlign: align } }
 				>
 					<InnerBlocks />
-					{ ( ( citation && citation.length > 0 ) || isSelected ) && (
+					{ ( ( citation && citation.length > 0 ) || isSelected || hasSelectedBlock ) && (
 						<RichText
 							tagName="cite"
 							value={ citation }

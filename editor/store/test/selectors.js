@@ -88,6 +88,7 @@ const {
 	isPermalinkEditable,
 	getPermalink,
 	getPermalinkParts,
+	hasBlockSelectedBlock,
 } = selectors;
 
 describe( 'selectors', () => {
@@ -1488,6 +1489,44 @@ describe( 'selectors', () => {
 			};
 
 			expect( hasSelectedBlock( state ) ).toBe( true );
+		} );
+	} );
+
+	describe( 'hasBlockSelectedBlock', () => {
+		it( 'should return true if the block has selected blocks', () => {
+			const state = {
+				editor: {
+					present: {
+						blockOrder: {
+							1: [ '2' ],
+						},
+					},
+				},
+				blockSelection: {
+					start: '2',
+					end: '2',
+				},
+			};
+
+			expect( hasBlockSelectedBlock( state, '1' ) ).toBe( true );
+		} );
+
+		it( 'should return false if the block does not have selected blocks', () => {
+			const state = {
+				editor: {
+					present: {
+						blockOrder: {
+							1: [ '2' ],
+						},
+					},
+				},
+				blockSelection: {
+					start: '1',
+					end: '1',
+				},
+			};
+
+			expect( hasBlockSelectedBlock( state, '1' ) ).toBe( false );
 		} );
 	} );
 
