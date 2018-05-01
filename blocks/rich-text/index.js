@@ -38,6 +38,11 @@ import { EVENTS } from './constants';
 import { withBlockEditContext } from '../block-edit/context';
 import { domToFormat, valueToString, isEmpty } from './format';
 
+/**
+ * Browser dependencies
+ */
+const { console } = window;
+
 const { BACKSPACE, DELETE, ENTER } = keycodes;
 
 /**
@@ -120,6 +125,7 @@ export class RichText extends Component {
 			selectedNodeId: 0,
 		};
 
+		this.savedContent = value;
 		this.isEmpty = ! value || ! value.length;
 		this.containerRef = createRef();
 	}
@@ -273,7 +279,7 @@ export class RichText extends Component {
 			} );
 
 			// Allows us to ask for this information when we get a report.
-			window.console.log( 'Received item:\n\n', blob );
+			console.log( 'Received item:\n\n', blob );
 
 			if ( isEmptyEditor && this.props.onReplace ) {
 				// Necessary to allow the paste bin to be removed without errors.
@@ -304,8 +310,8 @@ export class RichText extends Component {
 	onPastePreProcess( event ) {
 		const HTML = this.isPlainTextPaste ? '' : event.content;
 		// Allows us to ask for this information when we get a report.
-		window.console.log( 'Received HTML:\n\n', HTML );
-		window.console.log( 'Received plain text:\n\n', this.pastedPlainText );
+		console.log( 'Received HTML:\n\n', HTML );
+		console.log( 'Received plain text:\n\n', this.pastedPlainText );
 
 		// There is a selection, check if a link is pasted.
 		if ( ! this.editor.selection.isCollapsed() ) {
@@ -320,7 +326,7 @@ export class RichText extends Component {
 				} );
 
 				// Allows us to ask for this information when we get a report.
-				window.console.log( 'Created link:\n\n', pastedText );
+				console.log( 'Created link:\n\n', pastedText );
 
 				event.preventDefault();
 
@@ -479,6 +485,10 @@ export class RichText extends Component {
 				if ( event.shiftKey || ! this.props.onSplit ) {
 					this.editor.execCommand( 'InsertLineBreak', false, event );
 				} else {
+					// Splitting the content might destroy the editor, so it's
+					// important that we stop other handlers (e.g. ones
+					// registered by TinyMCE) from also handling this event.
+					event.stopImmediatePropagation();
 					this.splitContent();
 				}
 			}
@@ -611,10 +621,8 @@ export class RichText extends Component {
 			return memo;
 		}, [] );
 
-		// Splitting into two blocks
-		this.setContent( this.props.value );
-
 		const { format } = this.props;
+
 		this.restoreContentAndSplit(
 			domToFormat( before, format, this.editor ),
 			domToFormat( after, format, this.editor )
@@ -693,15 +701,16 @@ export class RichText extends Component {
 			!! this.editor &&
 			this.props.tagName === prevProps.tagName &&
 			this.props.value !== prevProps.value &&
-			this.props.value !== this.savedContent &&
-
-			// Comparing using isEqual is necessary especially to avoid unnecessary updateContent calls
-			// This fixes issues in multi richText blocks like quotes when moving the focus between
-			// the different editables.
-			! isEqual( this.props.value, prevProps.value ) &&
-			! isEqual( this.props.value, this.savedContent )
+			this.props.value !== this.savedContent
 		) {
 			this.updateContent();
+
+			if (
+				'development' === process.env.NODE_ENV &&
+				isEqual( this.props.value, prevProps.value )
+			) {
+				console.warn( 'The current and previous value props are not strictly equal but the contents are the same. Please ensure the value prop reference does not change.' );
+			}
 		}
 	}
 
@@ -758,14 +767,15 @@ export class RichText extends Component {
 
 	/**
 	 * Calling onSplit means we need to abort the change done by TinyMCE.
-	 * we need to call updateContent to restore the initial content before calling onSplit.
+	 * we need to call setContent to restore the initial content before calling onSplit.
 	 *
 	 * @param {Array}  before content before the split position
 	 * @param {Array}  after  content after the split position
 	 * @param {?Array} blocks blocks to insert at the split position
 	 */
 	restoreContentAndSplit( before, after, blocks = [] ) {
-		this.updateContent();
+		this.setContent( before );
+		this.onChange();
 		this.props.onSplit( before, after, ...blocks );
 	}
 
