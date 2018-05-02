@@ -72,8 +72,10 @@ class GalleryImage extends Component {
 	}
 
 	componentWillReceiveProps( { isSelected, attributesToSet } ) {
-		// Each time we receive an attributesToSet prop we pass it to set attributes.
-		// Required because some attributes may have to be async loaded from the rest API.
+		// `attributesToSet` represent async instructions to change attributes
+		// based on an API response.  The component that passes
+		// `attributesToSet` is also responsible for dropping this prop once
+		// the appropriate attributes are set.
 		if ( attributesToSet ) {
 			this.props.setAttributes( attributesToSet );
 		}
@@ -145,18 +147,23 @@ class GalleryImage extends Component {
 
 export default withSelect( ( select, ownProps ) => {
 	const { id, url } = ownProps;
-	// We already have the url or the id is unknown no need to set attributes in both cases.
+
+	// No need to set attributes if `url` is already present. Furthermore, bail
+	// if no ID provided.
 	if ( url || ! id ) {
 		return;
 	}
+
 	const { getMedia } = select( 'core' );
 	const image = getMedia( id );
-	// The image has not yet loaded, we can not set the attributes yet.
+
+	// Bail if the image has not yet loaded.
 	if ( ! image ) {
 		return;
 	}
-	// The url is not know, but we already have the image loaded from the rest api.
-	// So we return attributes that will be set during componentWillReceiveProps invocation using the information from the rest api response.
+
+	// Retrieve image data from API response and return it as attributes to be
+	// set in `componentWillReceiveProps`.
 	return {
 		attributesToSet: {
 			url: image.source_url,
