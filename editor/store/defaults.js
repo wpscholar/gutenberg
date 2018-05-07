@@ -59,6 +59,29 @@ export const EDITOR_SETTINGS_DEFAULTS = {
 		},
 	],
 
+	fontSizes: [
+		{
+			name: 'small',
+			shortName: 'S',
+			size: 14,
+		},
+		{
+			name: 'regular',
+			shortName: 'M',
+			size: 16,
+		},
+		{
+			name: 'large',
+			shortName: 'L',
+			size: 36,
+		},
+		{
+			name: 'larger',
+			shortName: 'XL',
+			size: 48,
+		},
+	],
+
 	// This is current max width of the block inner area
 	// It's used to constraint image resizing and this value could be overriden later by themes
 	maxWidth: 608,

@@ -5,8 +5,12 @@
 	&,
 	& p {
 		font-family: $editor-font;
-		font-size: $editor-font-size;
 		line-height: $editor-line-height;
+	}
+
+	&,
+	& p:not([class*="font-size"]) {
+		font-size: $editor-font-size;
 	}
 
 	& ul,
