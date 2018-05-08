@@ -404,12 +404,7 @@ export const settings = {
 				setTextColor: setColor( 'textColor', 'customTextColor' ),
 			};
 		} ),
-		withFontSizes( ( getFontSize, setFontSize, { attributes, setAttributes } ) => {
-			return {
-				fontSize: getFontSize( attributes.fontSize, attributes.customFontSize ),
-				setFontSize: setFontSize( 'fontSize', 'customFontSize', setAttributes ),
-			};
-		} ),
+		withFontSizes( 'fontSize', 'customFontSize' ),
 		FallbackStyles,
 	)( ParagraphBlock ),
 

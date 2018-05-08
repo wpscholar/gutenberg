@@ -987,6 +987,7 @@ function gutenberg_editor_scripts_and_styles( $hook ) {
 	$gutenberg_theme_support = get_theme_support( 'gutenberg' );
 	$align_wide              = get_theme_support( 'align-wide' );
 	$color_palette           = get_theme_support( 'editor-color-palette' );
+	$font_sizes              = get_theme_support( 'editor-font-sizes' );
 
 	// Backcompat for Color Palette set through `gutenberg` array.
 	if ( empty( $color_palette ) && ! empty( $gutenberg_theme_support[0]['colors'] ) ) {
@@ -1025,6 +1026,10 @@ function gutenberg_editor_scripts_and_styles( $hook ) {
 
 	if ( ! empty( $color_palette ) ) {
 		$editor_settings['colors'] = $color_palette;
+	}
+
+	if ( ! empty( $font_sizes ) ) {
+		$editor_settings['fontSizes'] = $font_sizes;
 	}
 
 	$post_type_object = get_post_type_object( $post_to_edit['type'] );
