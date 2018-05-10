@@ -3,17 +3,16 @@
  */
 import { parse } from 'url';
 import { includes, kebabCase, toLower } from 'lodash';
-import { stringify } from 'querystring';
-import memoize from 'memize';
 import classnames from 'classnames';
 
 /**
  * WordPress dependencies
  */
 import { __, sprintf } from '@wordpress/i18n';
-import { Component, Fragment, renderToString } from '@wordpress/element';
+import { Component, compose, Fragment, renderToString } from '@wordpress/element';
 import { Button, Placeholder, Spinner, SandBox } from '@wordpress/components';
 import { createBlock } from '@wordpress/blocks';
+import { withSelect } from '@wordpress/data';
 import {
 	BlockControls,
 	BlockAlignmentToolbar,
@@ -28,9 +27,6 @@ import './editor.scss';
 
 // These embeds do not work in sandboxes
 const HOSTS_NO_PREVIEWS = [ 'facebook.com' ];
-
-// Caches the embed API calls, so if blocks get transformed, or deleted and added again, we don't spam the API.
-const wpEmbedAPI = memoize( ( url ) => wp.apiRequest( { path: `/oembed/1.0/proxy?${ stringify( { url } ) }` } ) );
 
 const matchesPatterns = ( url, patterns = [] ) => {
 	return patterns.some( ( pattern ) => {
@@ -86,28 +82,52 @@ function getEmbedBlockSettings( { title, description, icon, category = 'embed', 
 			}
 		},
 
-		edit: class extends Component {
+		edit: compose(
+			withSelect( ( select, ownProps ) => {
+				const { url } = ownProps.attributes;
+				// Preview is undefined if we don't know the status of it, false if it failed,
+				// otherwise it will be an object containing the embed response.
+				const preview = url ? select( 'core/blocks' ).getPreview( url ) : undefined;
+				return {
+					preview,
+				};
+			} )
+		)( class extends Component {
 			constructor() {
 				super( ...arguments );
-
-				this.doServerSideRender = this.doServerSideRender.bind( this );
-
+				this.setUrl = this.setUrl.bind( this );
+				this.processPreview = this.processPreview.bind( this );
 				this.state = {
 					html: '',
 					type: '',
 					error: false,
 					fetching: false,
 					providerName: '',
+					url: '',
 				};
 			}
 
 			componentWillMount() {
-				this.doServerSideRender();
+				if ( this.props.attributes.url ) {
+					// Loading from a saved block, set the state up and display the fetching UI.
+					this.setState( { fetching: true, url: this.props.attributes.url } );
+					if ( this.props.preview ) {
+						// Preview must have already been fetched prior to loading this block, so process it.
+						this.processPreview( this.props.preview, this.props.attributes.url );
+					}
+				}
 			}
 
 			componentWillUnmount() {
 				// can't abort the fetch promise, so let it know we will unmount
 				this.unmounting = true;
+			}
+
+			componentWillReceiveProps( nextProps ) {
+				const hasPreview = undefined !== nextProps.preview;
+				if ( hasPreview ) {
+					this.processPreview( nextProps.preview, nextProps.attributes.url );
+				}
 			}
 
 			getPhotoHtml( photo ) {
@@ -117,12 +137,30 @@ function getEmbedBlockSettings( { title, description, icon, category = 'embed', 
 				return renderToString( photoPreview );
 			}
 
-			doServerSideRender( event ) {
+			setUrl( event ) {
 				if ( event ) {
 					event.preventDefault();
 				}
-				const { url } = this.props.attributes;
+				const { url } = this.state;
 				const { setAttributes } = this.props;
+				if ( url === this.props.attributes.url ) {
+					// Don't change anything, otherwise we go into the 'fetching' state but never
+					// get new props, because the url has not changed.
+					return;
+				}
+				setAttributes( { url } );
+				this.setState( { fetching: true, error: false } );
+			}
+
+			processPreview( obj, url ) {
+				const { setAttributes } = this.props;
+
+				if ( false === obj ) {
+					// If the preview is false (not falsey, but actually false) then the embed request failed,
+					// so we cannot embed it.
+					this.setState( { fetching: false, error: true } );
+					return;
+				}
 
 				if ( undefined === url ) {
 					return;
@@ -140,49 +178,36 @@ function getEmbedBlockSettings( { title, description, icon, category = 'embed', 
 					}
 				}
 
-				this.setState( { error: false, fetching: true } );
-				wpEmbedAPI( url )
-					.then(
-						( obj ) => {
-							if ( this.unmounting ) {
-								return;
-							}
-							// Some plugins only return HTML with no type info, so default this to 'rich'.
-							let { type = 'rich' } = obj;
-							// If we got a provider name from the API, use it for the slug, otherwise we use the title,
-							// because not all embed code gives us a provider name.
-							const { html, provider_name: providerName } = obj;
-							const providerNameSlug = kebabCase( toLower( '' !== providerName ? providerName : title ) );
-							// This indicates it's a WordPress embed, there aren't a set of URL patterns we can use to match WordPress URLs.
-							if ( includes( html, 'class="wp-embedded-content" data-secret' ) ) {
-								type = 'wp-embed';
-								// If this is not the WordPress embed block, transform it into one.
-								if ( this.props.name !== 'core-embed/wordpress' ) {
-									this.props.onReplace( createBlock( 'core-embed/wordpress', { url } ) );
-									return;
-								}
-							}
-							if ( html ) {
-								this.setState( { html, type, providerNameSlug } );
-								setAttributes( { type, providerNameSlug } );
-							} else if ( 'photo' === type ) {
-								this.setState( { html: this.getPhotoHtml( obj ), type, providerNameSlug } );
-								setAttributes( { type, providerNameSlug } );
-							} else {
-								// No html, no custom type that we support, so show the error state.
-								this.setState( { error: true } );
-							}
-							this.setState( { fetching: false } );
-						},
-						() => {
-							this.setState( { fetching: false, error: true } );
-						}
-					);
+				// Some plugins only return HTML with no type info, so default this to 'rich'.
+				let { type = 'rich' } = obj;
+				// If we got a provider name from the API, use it for the slug, otherwise we use the title,
+				// because not all embed code gives us a provider name.
+				const { html, provider_name: providerName } = obj;
+				const providerNameSlug = kebabCase( toLower( '' !== providerName ? providerName : title ) );
+
+				// This indicates it's a WordPress embed, there aren't a set of URL patterns we can use to match WordPress URLs.
+				if ( includes( html, 'class="wp-embedded-content" data-secret' ) ) {
+					type = 'wp-embed';
+					// If this is not the WordPress embed block, transform it into one.
+					if ( this.props.name !== 'core-embed/wordpress' ) {
+						this.props.onReplace( createBlock( 'core-embed/wordpress', { url } ) );
+						return;
+					}
+				}
+
+				if ( html ) {
+					this.setState( { html, type, providerNameSlug } );
+					setAttributes( { type, providerNameSlug } );
+				} else if ( 'photo' === type ) {
+					this.setState( { html: this.getPhotoHtml( obj ), type, providerNameSlug } );
+					setAttributes( { type, providerNameSlug } );
+				}
+				this.setState( { fetching: false } );
 			}
 
 			render() {
-				const { html, type, error, fetching } = this.state;
-				const { align, url, caption } = this.props.attributes;
+				const { html, type, error, fetching, url } = this.state;
+				const { align, caption } = this.props.attributes;
 				const { setAttributes, isSelected, className } = this.props;
 				const updateAlignment = ( nextAlign ) => setAttributes( { align: nextAlign } );
 
@@ -214,14 +239,14 @@ function getEmbedBlockSettings( { title, description, icon, category = 'embed', 
 						<Fragment>
 							{ controls }
 							<Placeholder icon={ icon } label={ label } className="wp-block-embed">
-								<form onSubmit={ this.doServerSideRender }>
+								<form onSubmit={ this.setUrl }>
 									<input
 										type="url"
 										value={ url || '' }
 										className="components-placeholder__input"
 										aria-label={ label }
 										placeholder={ __( 'Enter URL to embed here…' ) }
-										onChange={ ( event ) => setAttributes( { url: event.target.value } ) } />
+										onChange={ ( event ) => this.setState( { url: event.target.value } ) } />
 									<Button
 										isLarge
 										type="submit">
@@ -275,7 +300,7 @@ function getEmbedBlockSettings( { title, description, icon, category = 'embed', 
 					</Fragment>
 				);
 			}
-		},
+		} ),
 
 		save( { attributes } ) {
 			const { url, caption, align, type, providerNameSlug } = attributes;
