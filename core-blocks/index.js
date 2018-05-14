@@ -7,6 +7,7 @@ import {
 	setUnknownTypeHandlerName,
 } from '@wordpress/blocks';
 import { deprecated } from '@wordpress/utils';
+import { dispatch } from '@wordpress/data';
 
 /**
  * Internal dependencies
@@ -78,9 +79,13 @@ export const registerCoreBlocks = () => {
 		table,
 		textColumns,
 		verse,
-		video,
 	].forEach( ( { name, settings } ) => {
 		registerBlockType( name, settings );
+	} );
+
+	[ video ].forEach( ( { name, definition, implementation } ) => {
+		dispatch( 'core/blocks' ).addBlockTypes( { name, ...definition } );
+		dispatch( 'core/blocks' ).implementBlockTypes( { name, ...implementation } );
 	} );
 
 	setDefaultBlockName( paragraph.name );
