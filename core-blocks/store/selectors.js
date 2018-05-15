@@ -13,12 +13,10 @@ export function getPreview( state, url ) {
 		return preview;
 	}
 
-	// this won't execute any scripts, so it's safe to check if the returned preview is just a single link
-	const linkCheck = document.createElement( 'div' );
-	linkCheck.innerHTML = preview.html;
+	const oEmbedLinkCheck = `<a href="${ url }">${ url }</a>`;
 
-	if ( 1 === linkCheck.children.length && 'A' === linkCheck.children[ 0 ].nodeName && 0 === linkCheck.children[ 0 ].children.length ) {
-		// single link, no children, it's oEmbed being helpful and creating a link for us, not actually embedding content
+	if ( oEmbedLinkCheck === preview.html ) {
+		// just a link to the url, it's oEmbed being helpful and creating a link for us, not actually embedding content
 		return false;
 	}
 
