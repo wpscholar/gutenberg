@@ -13,7 +13,7 @@ export function getPreview( state, url ) {
 		return preview;
 	}
 
-	const oEmbedLinkCheck = '<a href="' + url +'">' + url + '</a>';
+	const oEmbedLinkCheck = '<a href="' + url + '">' + url + '</a>';
 
 	if ( oEmbedLinkCheck === preview.html ) {
 		// just a link to the url, it's oEmbed being helpful and creating a link for us, not actually embedding content

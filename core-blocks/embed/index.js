@@ -87,7 +87,7 @@ function getEmbedBlockSettings( { title, description, icon, category = 'embed', 
 				const { url } = ownProps.attributes;
 				// Preview is undefined if we don't know the status of it, false if it failed,
 				// otherwise it will be an object containing the embed response.
-				const preview = url ? select( 'core/blocks' ).getPreview( url ) : undefined;
+				const preview = url ? select( 'core/block-data' ).getPreview( url ) : undefined;
 				return {
 					preview,
 				};

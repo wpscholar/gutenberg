@@ -11,7 +11,7 @@ import * as selectors from './selectors';
 import * as actions from './actions';
 import * as resolvers from './resolvers';
 
-const store = registerStore( 'core/blocks', {
+const store = registerStore( 'core/block-data', {
 	reducer,
 	actions,
 	selectors,
