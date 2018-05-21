@@ -70,20 +70,36 @@ export async function newPost( postType ) {
 	await visitAdmin( 'post-new.php', postType ? 'post_type=' + postType : '' );
 }
 
+export async function getWindowWidth() {
+	return await page.evaluate(
+		() => {
+			return window.innerWidth;
+		}
+	);
+}
+
 export async function newDesktopBrowserPage() {
 	global.page = await browser.newPage();
+	await setDesktopViewPort();
+}
 
-	page.on( 'pageerror', ( error ) => {
-		// Disable reason: `jest/globals` doesn't include `fail`, but it is
-		// part of the global context supplied by the underlying Jasmine:
-		//
-		//  https://jasmine.github.io/api/3.0/global.html#fail
+export async function newMobileBrowserPage() {
+	global.page = await browser.newPage();
+	await setMobileViewPort();
+}
 
-		// eslint-disable-next-line no-undef
-		fail( error );
-	} );
-
+export async function setDesktopViewPort() {
 	await page.setViewport( { width: 1000, height: 700 } );
+	if ( 1000 !== ( await getWindowWidth() ) ) {
+		throw 'An error ocurred while setting the desktop viewport';
+	}
+}
+
+export async function setMobileViewPort() {
+	await page.setViewport( { width: 500, height: 700 } );
+	if ( 500 !== ( await getWindowWidth() ) ) {
+		throw 'An error ocurred while setting the mobile viewport';
+	}
 }
 
 export async function switchToEditor( mode ) {
@@ -139,4 +155,8 @@ export async function pressWithModifier( modifier, key ) {
 	await page.keyboard.down( modifier );
 	await page.keyboard.press( key );
 	return page.keyboard.up( modifier );
+}
+
+export async function clearLocalStorage() {
+	await page.evaluate( () => window.localStorage.clear() );
 }
