@@ -10,7 +10,6 @@ import { Component } from '@wordpress/element';
 import { IconButton, Spinner } from '@wordpress/components';
 import { __ } from '@wordpress/i18n';
 import { keycodes } from '@wordpress/utils';
-import { withSelect } from '@wordpress/data';
 import { RichText } from '@wordpress/editor';
 
 /**
@@ -71,15 +70,7 @@ class GalleryImage extends Component {
 		}
 	}
 
-	componentWillReceiveProps( { isSelected, attributesToSet } ) {
-		// `attributesToSet` represent async instructions to change attributes
-		// based on an API response.  The component that passes
-		// `attributesToSet` is also responsible for dropping this prop once
-		// the appropriate attributes are set.
-		if ( attributesToSet ) {
-			this.props.setAttributes( attributesToSet );
-		}
-
+	componentWillReceiveProps( { isSelected } ) {
 		// unselect the caption so when the user selects other image and comeback
 		// the caption is not immediately selected
 		if ( this.state.captionSelected && ! isSelected && this.props.isSelected ) {
@@ -145,29 +136,4 @@ class GalleryImage extends Component {
 	}
 }
 
-export default withSelect( ( select, ownProps ) => {
-	const { id, url } = ownProps;
-
-	// No need to set attributes if `url` is already present. Furthermore, bail
-	// if no ID provided.
-	if ( url || ! id ) {
-		return;
-	}
-
-	const { getMedia } = select( 'core' );
-	const image = getMedia( id );
-
-	// Bail if the image has not yet loaded.
-	if ( ! image ) {
-		return;
-	}
-
-	// Retrieve image data from API response and return it as attributes to be
-	// set in `componentWillReceiveProps`.
-	return {
-		attributesToSet: {
-			url: image.source_url,
-			alt: image.alt_text,
-		},
-	};
-} )( GalleryImage );
+export default GalleryImage;
