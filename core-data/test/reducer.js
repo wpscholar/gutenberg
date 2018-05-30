@@ -6,7 +6,7 @@ import deepFreeze from 'deep-freeze';
 /**
  * Internal dependencies
  */
-import { terms, entities } from '../reducer';
+import { terms, entities, embedPreviews } from '../reducer';
 
 describe( 'terms()', () => {
 	it( 'returns an empty object by default', () => {
@@ -75,6 +75,27 @@ describe( 'entities', () => {
 				w: { slug: 'w', title: 'water' },
 				b: { slug: 'b', title: 'beach' },
 			},
+		} );
+	} );
+} );
+
+describe( 'embedPreviews()', () => {
+	it( 'returns an empty object by default', () => {
+		const state = embedPreviews( undefined, {} );
+
+		expect( state ).toEqual( {} );
+	} );
+
+	it( 'returns with received preview', () => {
+		const originalState = deepFreeze( {} );
+		const state = embedPreviews( originalState, {
+			type: 'RECEIVE_EMBED_PREVIEW',
+			url: 'http://twitter.com/notnownikki',
+			preview: { data: 42 },
+		} );
+
+		expect( state ).toEqual( {
+			'http://twitter.com/notnownikki': { data: 42 },
 		} );
 	} );
 } );

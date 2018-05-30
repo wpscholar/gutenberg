@@ -12,7 +12,6 @@ import deprecated from '@wordpress/deprecated';
  * Internal dependencies
  */
 import './style.scss';
-import './store';
 import * as paragraph from './paragraph';
 import * as image from './image';
 import * as heading from './heading';

@@ -135,6 +135,26 @@ function entity( entityConfig ) {
 	};
 }
 
+/**
+ * Reducer managing embed preview data.
+ *
+ * @param {Object} state  Current state.
+ * @param {Object} action Dispatched action.
+ *
+ * @return {Object} Updated state.
+ */
+export function embedPreviews( state = {}, action ) {
+	switch ( action.type ) {
+		case 'RECEIVE_EMBED_PREVIEW':
+			const { url, preview } = action;
+			return {
+				...state,
+				[ url ]: preview,
+			};
+	}
+	return state;
+}
+
 const entitiesByKind = groupBy( entitiesConfig, 'kind' );
 export const entities = combineReducers( Object.entries( entitiesByKind ).reduce( ( memo, [ kind, subEntities ] ) => {
 	const kindReducer = combineReducers( subEntities.reduce(
@@ -155,4 +175,5 @@ export default combineReducers( {
 	taxonomies,
 	themeSupports,
 	entities,
+	embedPreviews,
 } );
