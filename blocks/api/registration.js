@@ -1,4 +1,4 @@
-/* eslint no-console: [ 'error', { allow: [ 'error' ] } ] */
+/* eslint no-console: [ 'error', { allow: [ 'error', 'warn' ] } ] */
 
 /**
  * External dependencies
@@ -15,7 +15,7 @@ import deprecated from '@wordpress/deprecated';
 /**
  * Internal dependencies
  */
-import { isValidIcon, normalizeIconObject } from './utils';
+import { isIconUnreadable, isValidIcon, normalizeIconObject } from './utils';
 
 /**
  * Defined behavior of a block type.
@@ -145,6 +145,14 @@ export function registerBlockType( name, settings ) {
 		console.error(
 			'The icon passed is invalid. ' +
 			'The icon should be a string, an element, a function, or an object following the specifications documented in https://wordpress.org/gutenberg/handbook/block-api/#icon-optional'
+		);
+		return;
+	}
+
+	if ( isIconUnreadable( settings.icon ) ) {
+		console.warn(
+			`The icon background color ${ settings.icon.background } and the foreground color ${ settings.icon.foreground } are not readable together. ` +
+			'Please try to increase the brightness and/or contrast difference between background and foreground.'
 		);
 		return;
 	}
