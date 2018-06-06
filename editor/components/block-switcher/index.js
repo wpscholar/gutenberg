@@ -1,8 +1,13 @@
 /**
+ * External dependencies
+ */
+import { castArray, filter, first, mapKeys, sortBy } from 'lodash';
+
+/**
  * WordPress dependencies
  */
 import { __ } from '@wordpress/i18n';
-import { Dropdown, Dashicon, IconButton, Toolbar, NavigableMenu } from '@wordpress/components';
+import { Dropdown, Dashicon, IconButton, ifCondition, Toolbar, NavigableMenu } from '@wordpress/components';
 import { getBlockType, getPossibleBlockTransformations, switchToBlockType } from '@wordpress/blocks';
 import { compose } from '@wordpress/element';
 import { keycodes } from '@wordpress/utils';
@@ -19,10 +24,17 @@ import BlockIcon from '../block-icon';
  */
 const { DOWN } = keycodes;
 
-export function BlockSwitcher( { blocks, onTransform, isLocked } ) {
-	const allowedBlocks = getPossibleBlockTransformations( blocks );
+export function BlockSwitcher( { blocks, onTransform, inserterItems } ) {
+	const itemsByName = mapKeys( inserterItems, ( { name } ) => name );
+	const possibleBlockTransformations = sortBy(
+		filter(
+			getPossibleBlockTransformations( blocks ),
+			( block ) => !! itemsByName[ block.name ]
+		),
+		( block ) => -itemsByName[ block.name ].frecency,
+	);
 
-	if ( isLocked || ! allowedBlocks.length ) {
+	if ( ! possibleBlockTransformations.length ) {
 		return null;
 	}
 
@@ -71,7 +83,7 @@ export function BlockSwitcher( { blocks, onTransform, isLocked } ) {
 						role="menu"
 						aria-label={ __( 'Block types' ) }
 					>
-						{ allowedBlocks.map( ( { name, title, icon } ) => (
+						{ possibleBlockTransformations.map( ( { name, title, icon } ) => (
 							<IconButton
 								key={ name }
 								onClick={ () => {
@@ -97,14 +109,15 @@ export function BlockSwitcher( { blocks, onTransform, isLocked } ) {
 }
 
 export default compose(
-	withSelect( ( select, ownProps ) => {
-		const { getBlock, getEditorSettings } = select( 'core/editor' );
-		const { templateLock } = getEditorSettings();
+	withSelect( ( select, { uids } ) => {
+		const { getBlocksByUID, getBlockRootUID, getInserterItems } = select( 'core/editor' );
+		const rootUID = getBlockRootUID( first( castArray( uids ) ) );
 		return {
-			blocks: ownProps.uids.map( getBlock ),
-			isLocked: !! templateLock,
+			blocks: getBlocksByUID( uids ),
+			inserterItems: getInserterItems( rootUID ),
 		};
 	} ),
+	ifCondition( ( { inserterItems } ) => inserterItems.length > 0 ),
 	withDispatch( ( dispatch, ownProps ) => ( {
 		onTransform( blocks, name ) {
 			dispatch( 'core/editor' ).replaceBlocks(

@@ -1,13 +1,13 @@
 /**
  * External dependencies
  */
-import { noop } from 'lodash';
+import { castArray, filter, first, mapKeys, noop, sortBy } from 'lodash';
 
 /**
  * WordPress dependencies
  */
 import { __ } from '@wordpress/i18n';
-import { IconButton } from '@wordpress/components';
+import { IconButton, ifCondition } from '@wordpress/components';
 import { getPossibleBlockTransformations, switchToBlockType } from '@wordpress/blocks';
 import { compose, Fragment } from '@wordpress/element';
 import { withSelect, withDispatch } from '@wordpress/data';
@@ -17,9 +17,16 @@ import { withSelect, withDispatch } from '@wordpress/data';
  */
 import './style.scss';
 
-function BlockTransformations( { blocks, small = false, onTransform, onClick = noop, isLocked, itemsRole } ) {
-	const possibleBlockTransformations = getPossibleBlockTransformations( blocks );
-	if ( isLocked || ! possibleBlockTransformations.length ) {
+function BlockTransformations( { blocks, small = false, onTransform, onClick = noop, inserterItems, itemsRole } ) {
+	const itemsByName = mapKeys( inserterItems, ( { name } ) => name );
+	const possibleBlockTransformations = sortBy(
+		filter(
+			getPossibleBlockTransformations( blocks ),
+			( block ) => !! itemsByName[ block.name ]
+		),
+		( block ) => -itemsByName[ block.name ].frecency,
+	);
+	if ( ! possibleBlockTransformations.length ) {
 		return null;
 	}
 	return (
@@ -52,13 +59,14 @@ function BlockTransformations( { blocks, small = false, onTransform, onClick = n
 }
 export default compose( [
 	withSelect( ( select, { uids } ) => {
-		const { getEditorSettings, getBlocksByUID } = select( 'core/editor' );
-		const { templateLock } = getEditorSettings();
+		const { getBlocksByUID, getBlockRootUID, getInserterItems } = select( 'core/editor' );
+		const rootUID = getBlockRootUID( first( castArray( uids ) ) );
 		return {
-			isLocked: !! templateLock,
 			blocks: getBlocksByUID( uids ),
+			inserterItems: getInserterItems( rootUID ),
 		};
 	} ),
+	ifCondition( ( { inserterItems } ) => inserterItems.length > 0 ),
 	withDispatch( ( dispatch, ownProps ) => ( {
 		onTransform( blocks, name ) {
 			dispatch( 'core/editor' ).replaceBlocks(
