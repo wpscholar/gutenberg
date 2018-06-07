@@ -34,6 +34,7 @@ export default function editorMediaUpload( {
 	const errorHandler = ( { file, sizeAboveLimit, generalError } ) => {
 		let errorMsg;
 		if ( sizeAboveLimit ) {
+			// translators: %s: file name
 			errorMsg = sprintf(
 				__( '%s exceeds the maximum upload size for this site.' ),
 				file.name
