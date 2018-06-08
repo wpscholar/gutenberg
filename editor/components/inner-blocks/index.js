@@ -21,6 +21,7 @@ function InnerBlocks( {
 	layouts,
 	allowedBlocks,
 	template,
+	templateLock,
 	isSmallScreen,
 	isSelectedBlockInRoot,
 } ) {
@@ -30,7 +31,7 @@ function InnerBlocks( {
 
 	return (
 		<div className={ classes }>
-			<BlockList { ...{ layouts, allowedBlocks, template } } />
+			<BlockList { ...{ layouts, allowedBlocks, template, templateLock } } />
 		</div>
 	);
 }

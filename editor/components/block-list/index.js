@@ -19,11 +19,15 @@ import { withSelect } from '@wordpress/data';
 import './style.scss';
 import BlockListLayout from './layout';
 
-const UngroupedLayoutBlockList = withSelect(
-	( select, ownProps ) => ( {
-		blockUIDs: select( 'core/editor' ).getBlockOrder( ownProps.rootUID ),
-	} )
-)( BlockListLayout );
+const UngroupedLayoutBlockList = withSelect( ( select, ownProps ) => {
+	const { getBlockOrder, getEditorSettings } = select( 'core/editor' );
+	const { templateLock = getEditorSettings().templateLock } = ownProps;
+
+	return {
+		blockUIDs: getBlockOrder( ownProps.rootUID ),
+		templateLock,
+	};
+} )( BlockListLayout );
 
 const GroupedLayoutBlockList = withSelect(
 	( select, ownProps ) => ( {

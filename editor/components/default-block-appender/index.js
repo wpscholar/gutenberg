@@ -73,12 +73,11 @@ export default compose(
 		const isEmpty = ! getBlockCount( ownProps.rootUID );
 		const lastBlock = getBlock( ownProps.lastBlockUID );
 		const isLastBlockDefault = get( lastBlock, [ 'name' ] ) === getDefaultBlockName();
-		const { templateLock, bodyPlaceholder } = getEditorSettings();
+		const { bodyPlaceholder } = getEditorSettings();
 
 		return {
 			isVisible: isEmpty || ! isLastBlockDefault,
 			showPrompt: isEmpty,
-			isLocked: !! templateLock,
 			placeholder: bodyPlaceholder,
 			hasTip: isTipVisible( 'core/editor.inserter' ),
 		};

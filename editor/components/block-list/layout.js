@@ -194,6 +194,7 @@ class BlockListLayout extends Component {
 			isGroupedByLayout,
 			rootUID,
 			renderBlockMenu,
+			templateLock,
 		} = this.props;
 
 		let defaultLayout;
@@ -227,6 +228,7 @@ class BlockListLayout extends Component {
 						rootUID={ rootUID }
 						lastBlockUID={ last( blockUIDs ) }
 						layout={ defaultLayout }
+						isLocked={ templateLock }
 					/>
 				</IgnoreNestedEvents>
 			</div>
