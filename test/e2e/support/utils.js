@@ -158,3 +158,14 @@ export async function clickOnMoreMenuItem( buttonLabel ) {
 	const itemButton = ( await page.$x( `//button[contains(text(), \'${ buttonLabel }\')]` ) )[ 0 ];
 	await itemButton.click( 'button' );
 }
+
+/**
+ * Clicks on the button in the header which opens Document Settings sidebar when it is closed.
+ */
+export async function ensureDocumentSettingsSidebarIsOpened() {
+	const openButton = await page.$( '.edit-post-header__settings button[aria-label="Settings"][aria-expaned="false"]' );
+
+	if ( openButton ) {
+		await page.click( openButton );
+	}
+}
