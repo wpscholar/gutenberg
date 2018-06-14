@@ -131,18 +131,19 @@
 		margin-bottom: -$block-padding;
 	}
 
-	// Space every block, and the default appender, using margins.
-	// This allows margins to collapse, which gives a better representation of how it looks on the frontend.
-	.editor-default-block-appender__content,
-	.editor-block-list__block .editor-block-list__block-edit {
-		margin-top: $block-padding * 2 + $block-spacing;
-		margin-bottom: $block-padding * 2 + $block-spacing;
-	}
-
 	// Adjust the spacing of the appender, or the first block, to sit near the title.
 	.editor-default-block-appender__content,
 	.editor-block-list__block:first-child .editor-block-list__block-edit {
 		margin-top: $block-padding - $block-spacing / 2;
+	}
+
+	// Space every block, and the default appender, using margins.
+	// This allows margins to collapse, which gives a better representation of how it looks on the frontend.
+	.editor-default-block-appender__content,
+	.editor-block-list__block .editor-block-list__block-edit,
+	.editor-block-list__layout .editor-block-list__block .editor-block-list__block-edit { // Explicitly target nested blocks, as those need to override the preceeding rule.
+		margin-top: $block-padding * 2 + $block-spacing;
+		margin-bottom: $block-padding * 2 + $block-spacing;
 	}
 }
 
@@ -220,14 +221,14 @@
 			transition: outline .1s linear;
 			pointer-events: none;
 
-			// show wider padding for top level blocks
+			// Show wider padding for top level blocks.
 			right: -$parent-block-padding;
 			left: -$parent-block-padding;
 			top: -$block-padding;
 			bottom: -$block-padding;
 		}
 
-		// show smaller padding for child blocks
+		// Show smaller padding for child blocks.
 		.editor-block-list__block-edit:before {
 			right: -$block-padding;
 			left: -$block-padding;
@@ -241,8 +242,6 @@
 	&.is-selected > .editor-block-list__block-edit:before {
 		// use opacity to work in various editor styles
 		outline: $border-width solid $dark-opacity-light-500;
-		top: -$block-padding;
-		bottom: -$block-padding;
 
 		.is-dark-theme & {
 			outline-color: $light-opacity-light-500;
@@ -390,7 +389,7 @@
 		// Mover and settings above
 		> .editor-block-mover,
 		> .editor-block-settings-menu {
-			top: -$block-side-ui-width - $border-width; // This moves the menu up by the height of the button + border.
+			top: -$block-side-ui-width - $block-padding - $border-width;
 			bottom: auto;
 			min-height: 0;
 			height: auto;
@@ -403,11 +402,11 @@
 		}
 
 		> .editor-block-mover {
-			left: 10px;
+			left: $parent-block-padding;
 		}
 
 		> .editor-block-settings-menu {
-			right: 10px;
+			right: $parent-block-padding;
 			width: $block-side-ui-width * 2;
 			flex-direction: row;
 		}
@@ -514,7 +513,7 @@
 
 
 /**
- * Left and right side UI
+ * Left and right side UI, & Unified toolbar on Mobile
  */
 
 .editor-block-list__block {
@@ -589,11 +588,13 @@
 	.editor-block-list__block-mobile-toolbar {
 		display: flex;
 		flex-direction: row;
-		margin-top: $item-spacing + $block-toolbar-height; // Make room for the height of the block toolbar above. 
+		margin-top: $item-spacing + $block-toolbar-height - $block-padding; // Make room for the height of the block toolbar above. 
 		margin-right: -$block-padding;
-		margin-bottom: -$block-padding - $border-width;
 		margin-left: -$block-padding;
 		border-top: $border-width solid $light-gray-500;
+		height: $block-toolbar-height;
+
+		transform: translateY( #{ $block-padding + $border-width } );
 
 		@include break-small() {
 			display: none;
@@ -601,7 +602,7 @@
 
 		// Show a shadow below the selected block to imply separation.
 		box-shadow: $shadow-below-only;
-		@include break-mobile() {
+		@include break-small() {
 			box-shadow: none;
 		}
 
@@ -775,12 +776,28 @@
 
 	// Position toolbar below the block on mobile.
 	position: absolute;
-	bottom: $block-toolbar-height;
-	left: $block-padding;
-	right: $block-padding;
+	bottom: $block-toolbar-height - $block-padding;
+	left: 0;
+	right: 0;
+
+	// Paint the borders on the toolbar itself on mobile.
+	border-top: 1px solid $light-gray-500;
+	.components-toolbar {
+		border-top: none;
+		border-bottom: none;
+
+	}
+
+	@include break-small() {
+		border-top: none;
+		.components-toolbar {
+			border-top: 1px solid $light-gray-500;
+			border-bottom: 1px solid $light-gray-500;
+		}
+	}
 
 	// Position the contextual toolbar above the block.
-	@include break-mobile() {
+	@include break-small() {
 		position: sticky;
 		bottom: auto;
 		left: auto;
@@ -834,10 +851,9 @@
 	}
 }
 
+// Position the block toolbar when contextual.
 .editor-block-contextual-toolbar .editor-block-toolbar {
 	width: 100%;
-	background: $white;
-	border: $border-width solid $light-gray-500;
 
 	// Hide right border on desktop, where the .components-toolbar instead has a right border.
 	@include break-small() {
@@ -845,8 +861,10 @@
 	}
 
 	// This prevents floats from messing up the position.
-	position: absolute;
-	left: 0;
+	@include break-small() {
+		position: absolute;
+		left: 0;
+	}
 
 	.editor-block-list__block[data-align="right"] & {
 		left: auto;
