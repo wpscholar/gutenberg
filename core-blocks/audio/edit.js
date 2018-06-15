@@ -2,12 +2,18 @@
  * WordPress dependencies
  */
 import { __ } from '@wordpress/i18n';
-import { IconButton, Toolbar } from '@wordpress/components';
+import {
+	CheckboxControl,
+	IconButton,
+	PanelBody,
+	Toolbar,
+} from '@wordpress/components';
 import { Component, Fragment } from '@wordpress/element';
 import {
+	BlockControls,
+	InspectorControls,
 	MediaPlaceholder,
 	RichText,
-	BlockControls,
 } from '@wordpress/editor';
 
 /**
@@ -26,7 +32,7 @@ export default class AudioEdit extends Component {
 	}
 
 	render() {
-		const { caption, src } = this.props.attributes;
+		const { autoplay, caption, loop, src } = this.props.attributes;
 		const { setAttributes, isSelected, className } = this.props;
 		const { editing } = this.state;
 		const switchToEditing = () => {
@@ -46,6 +52,14 @@ export default class AudioEdit extends Component {
 				setAttributes( { src: newSrc, id: undefined } );
 			}
 			this.setState( { editing: false } );
+		};
+
+		const onToggleAutoplay = ( newVal ) => {
+			setAttributes( { autoplay: newVal } );
+		};
+
+		const onToggleLoop = ( newVal ) => {
+			setAttributes( { loop: newVal } );
 		};
 
 		if ( editing ) {
@@ -79,6 +93,20 @@ export default class AudioEdit extends Component {
 						/>
 					</Toolbar>
 				</BlockControls>
+				<InspectorControls>
+					<PanelBody title={ __( 'Playback Controls' ) }>
+						<CheckboxControl
+							label={ __( 'Autoplay' ) }
+							onChange={ onToggleAutoplay }
+							checked={ autoplay }
+						/>
+						<CheckboxControl
+							label={ __( 'Loop' ) }
+							onChange={ onToggleLoop }
+							checked={ loop }
+						/>
+					</PanelBody>
+				</InspectorControls>
 				<figure className={ className }>
 					<audio controls="controls" src={ src } />
 					{ ( ( caption && caption.length ) || !! isSelected ) && (
