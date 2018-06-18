@@ -20,7 +20,7 @@ describe( 'BlockSwitcher', () => {
 	const headingBlock1 = {
 		attributes: {
 			content: [ 'How are you?' ],
-			nodeName: 'H2',
+			level: 2,
 		},
 		isValid: true,
 		name: 'core/heading',
@@ -31,7 +31,6 @@ describe( 'BlockSwitcher', () => {
 	const textBlock = {
 		attributes: {
 			content: [ 'I am great!' ],
-			nodeName: 'P',
 		},
 		isValid: true,
 		name: 'core/text',
@@ -42,7 +41,7 @@ describe( 'BlockSwitcher', () => {
 	const headingBlock2 = {
 		attributes: {
 			content: [ 'I am the greatest!' ],
-			nodeName: 'H3',
+			level: 3,
 		},
 		isValid: true,
 		name: 'core/text',
