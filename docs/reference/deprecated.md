@@ -11,6 +11,7 @@ Gutenberg's deprecation policy is intended to support backwards-compatibility fo
 - `getInserterItems`: the `allowedBlockTypes` argument was removed and the `parentUID` argument was added.
 - `getFrecentInserterItems` selector removed. Please use `getInserterItems` instead.
 - `getSupportedBlocks` selector removed. Please use `canInsertBlockType` instead.
+- `property` source removed. Please use equivalent `text`, `html`, or `attribute` source, or comment attribute instead.
 
 ## 3.1.0
 
