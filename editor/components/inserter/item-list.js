@@ -45,7 +45,10 @@ class ItemList extends Component {
 										}
 									)
 								}
-								onClick={ () => onSelect( item ) }
+								onClick={ () => {
+									onSelect( item );
+									onHover( null );
+								} }
 								disabled={ item.isDisabled }
 								onMouseEnter={ () => onHover( item ) }
 								onMouseLeave={ () => onHover( null ) }
