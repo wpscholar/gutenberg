@@ -1,7 +1,7 @@
 /**
  * External Dependencies
  */
-import { compact, forEach, get, includes, noop, startsWith } from 'lodash';
+import { compact, flatMap, forEach, get, includes, map, noop, startsWith } from 'lodash';
 
 /**
  * WordPress dependencies
@@ -49,8 +49,19 @@ export function mediaUpload( {
 
 	// Allowed types for the current WP_User
 	const allowedMimeTypesForUser = get( window, [ '_wpMediaSettings', 'allowedMimeTypes' ] );
+	// Browsers may use unexpected mime types and they defer from browser to browser.
+	// Here we compute additional possible mime types.
+	// This allows us to be more flexible we don't want to block files that the server would accept.
+	// Converts { jpg|jpeg|jpe: "image/jpeg" } into [ "image/jpeg", "image/jpg", "image/jpeg", "image/jpe" ]
+	// This solves the problem in chrome where mp3 files have audio/mp3 instead of audio/mpeg.
+	// https://bugs.chromium.org/p/chromium/issues/detail?id=227004
+	const flexibleAllowedMimeTypes = flatMap( allowedMimeTypesForUser, ( mime, extensionsString ) => {
+		const [ generalMimeType ] = mime.split( '/' );
+		const extensions = extensionsString.split( '|' );
+		return [ mime, ...map( extensions, ( extension ) => `${ generalMimeType }/${ extension }` ) ];
+	} );
 	const isAllowedMimeTypeForUser = ( fileType ) => {
-		return includes( allowedMimeTypesForUser, fileType );
+		return includes( flexibleAllowedMimeTypes, fileType );
 	};
 
 	files.forEach( ( mediaFile, idx ) => {
