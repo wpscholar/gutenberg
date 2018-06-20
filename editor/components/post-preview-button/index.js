@@ -23,12 +23,12 @@ export class PostPreviewButton extends Component {
 		};
 	}
 
-	componentWillReceiveProps( nextProps ) {
-		const { modified, link } = nextProps;
+	componentDidUpdate( prevProps ) {
+		const { modified, link } = this.props;
 		const { isAwaitingSave } = this.state;
 		const hasFinishedSaving = (
 			isAwaitingSave &&
-			modified !== this.props.modified
+			modified !== prevProps.modified
 		);
 
 		if ( hasFinishedSaving && this.previewWindow ) {

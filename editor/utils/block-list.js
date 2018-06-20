@@ -40,9 +40,9 @@ const INNER_BLOCK_LIST_CACHE = {};
 export function createInnerBlockList( uid, renderBlockMenu = noop ) {
 	if ( ! INNER_BLOCK_LIST_CACHE[ uid ] ) {
 		const InnerBlockListComponent = class extends Component {
-			componentWillReceiveProps( nextProps ) {
+			componentDidUpdate() {
 				this.updateNestedSettings( {
-					supportedBlocks: nextProps.allowedBlocks,
+					supportedBlocks: this.props.allowedBlocks,
 				} );
 			}
 
